@@ -54,6 +54,20 @@ st.markdown(
     .badge-fail { background: #ffebee; color: #b71c1c; }
     .small-caption { color: #888; font-size: 12px; }
     .section-title { border-left: 4px solid #1976d2; padding-left: 10px; margin-top: 8px; }
+    .hero {
+        background: linear-gradient(135deg, #0d47a1 0%, #1976d2 50%, #c62828 100%);
+        padding: 36px 28px; border-radius: 12px; color: white; margin-bottom: 18px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .hero h1 { color: white; margin: 0; font-size: 32px; }
+    .hero p  { color: rgba(255,255,255,0.92); margin: 8px 0 0; font-size: 15px; }
+    .hero .tag { display: inline-block; background: rgba(255,255,255,0.18);
+                 padding: 3px 10px; border-radius: 12px; font-size: 12px;
+                 margin-right: 6px; }
+    .key-finding {
+        background: #fff3e0; border-left: 4px solid #ef6c00;
+        padding: 12px 16px; border-radius: 4px; margin: 12px 0;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -109,56 +123,119 @@ with st.sidebar:
 # -----------------------------------------------------------------------------
 
 def page_overview():
-    st.title(DATA.PROJECT["title"])
-    st.markdown(f"**{DATA.PROJECT['subtitle']}**")
+    # ---- Hero ---------------------------------------------------------------
+    st.markdown(
+        f"""
+        <div class='hero'>
+          <h1>🌋 {DATA.PROJECT['title']}</h1>
+          <p>{DATA.PROJECT['subtitle']}</p>
+          <p style='margin-top:14px;'>
+            <span class='tag'>RAG + reranking</span>
+            <span class='tag'>ReAct agent</span>
+            <span class='tag'>MCP server</span>
+            <span class='tag'>Multimodal (LLaVA)</span>
+            <span class='tag'>Live feeds</span>
+            <span class='tag'>OWASP-aware</span>
+          </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ---- Visual gallery: what the chatbot reasons about ---------------------
+    st.markdown("#### What this chatbot reasons about")
+    classes_order = ["fire", "flood", "landslide", "earthquake", "smoke", "normal"]
+    cols = st.columns(6)
+    for col, cls in zip(cols, classes_order):
+        img_path = SAMPLE_IMAGES_DIR / f"{cls}.jpg"
+        with col:
+            if img_path.exists():
+                st.image(str(img_path), caption=cls.upper(), use_container_width=True)
+    st.caption(
+        "Six visual classes the multimodal stack distinguishes (LLaVA via Ollama), "
+        "trained-on / evaluated against ~9k labeled images from Kaggle. "
+        "On top of imagery the system also reasons over 80K+ historical disaster records "
+        "and live event feeds (NASA EONET + GDACS)."
+    )
+
     st.divider()
 
+    # ---- Headline numbers ---------------------------------------------------
     c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        metric_card("Datasets", "3 + 1 image set", "Kaggle / EM-DAT / GDACS")
-    with c2:
-        metric_card("MCP tools", "8", "FastMCP, stdio")
-    with c3:
-        metric_card("Live feeds", "2", "NASA EONET + GDACS")
-    with c4:
-        metric_card("Tests", "75 / 75", "pytest passing")
+    with c1: metric_card("Datasets", "3 + image set", "Kaggle / EM-DAT")
+    with c2: metric_card("MCP tools", "8", "FastMCP over stdio")
+    with c3: metric_card("Live feeds", "2", "NASA EONET + GDACS")
+    with c4: metric_card("Tests", "75 / 75", "pytest passing")
 
+    # ---- Project lineage (matches notebook §0 + §0.5) -----------------------
     st.markdown("### Project lineage")
+    st.caption("This final project consolidates three previous course works into a single end-to-end system.")
     for proj, contribution in DATA.PROJECT["lineage"]:
-        st.markdown(f"- **`{proj}`** — {contribution}")
+        with st.container(border=True):
+            st.markdown(f"**`{proj}`** — {contribution}")
 
+    # ---- Architecture (matches notebook intro ASCII diagram) ----------------
     st.markdown("### Architecture")
-    st.code(
-        """
+    c_diag, c_layers = st.columns([2, 1])
+    with c_diag:
+        st.code(
+            """
                 ┌─────────────────────────────────────────┐
-                │   User (Streamlit / Notebook)            │
+                │   User (Streamlit / Notebook)           │
                 └──────────────────┬──────────────────────┘
                                    ▼
                 ┌─────────────────────────────────────────┐
                 │   LangChain ReAct Agent  (llama3.2)     │
                 │   ─ decides which tool to use per query │
-                └─────┬──────┬───────┬──────────┬─────────┘
-                      ▼      ▼       ▼          ▼
-              ┌─────────┐┌──────┐┌──────┐ ┌──────────┐
-              │ RAG +   ││ CSV  ││ NASA │ │  GDACS   │
-              │ rerank  ││ tool ││ EONET│ │ humanit. │
-              └────┬────┘└──────┘└──────┘ └──────────┘
-                   │
-                   └──> ChromaDB + MiniLM + cross-encoder
-        """,
-        language=None,
+                └─────┬──────┬───────┬───────┬────────────┘
+                      ▼      ▼       ▼       ▼
+              ┌────────┐┌──────┐┌──────┐ ┌────────┐ ┌──────┐
+              │ RAG +  ││ CSV  ││ NASA │ │ GDACS  │ │LLaVA │
+              │ rerank ││ tool ││ EONET│ │humanit.│ │vision│
+              └───┬────┘└──────┘└──────┘ └────────┘ └──────┘
+                  │
+                  └─> ChromaDB + MiniLM + cross-encoder
+            """,
+            language=None,
+        )
+    with c_layers:
+        st.markdown("**Stack at a glance**")
+        for k, v in DATA.PROJECT["stack"].items():
+            st.markdown(f"- **{k}** — `{v}`")
+
+    # ---- Why this project (academic framing) --------------------------------
+    st.markdown("### Why this project")
+    st.markdown(
+        "Disaster response decisions sit on a knife edge: hours of delay translate into "
+        "lives. Yet the relevant information is fragmented across **historical statistics** "
+        "(EM-DAT, multi-decade CSVs), **live geospatial feeds** (NASA EONET, GDACS), and "
+        "**unstructured visual evidence** (eyewitness photos). This project demonstrates "
+        "that a single tool-using LLM agent — running entirely on local hardware via Ollama — "
+        "can integrate all three modalities behind a uniform Q&A interface, with measurable "
+        "and reproducible quality."
     )
 
-    st.markdown("### Datasets used")
-    st.dataframe(
-        pd.DataFrame(DATA.PROJECT["datasets"], columns=["Dataset", "Source"]),
-        use_container_width=True, hide_index=True,
-    )
+    # ---- Data + endpoint inventory ------------------------------------------
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("### Datasets used")
+        st.dataframe(
+            pd.DataFrame(DATA.PROJECT["datasets"], columns=["Dataset", "Source"]),
+            use_container_width=True, hide_index=True,
+        )
+    with c2:
+        st.markdown("### Live endpoints consumed")
+        st.dataframe(
+            pd.DataFrame(DATA.PROJECT["live_endpoints"], columns=["Service", "Endpoint"]),
+            use_container_width=True, hide_index=True,
+        )
 
-    st.markdown("### Live endpoints consumed")
-    st.dataframe(
-        pd.DataFrame(DATA.PROJECT["live_endpoints"], columns=["Service", "Endpoint"]),
-        use_container_width=True, hide_index=True,
+    st.markdown(
+        "<div class='key-finding'><b>Key finding (preview):</b> the ReAct agent picks the "
+        "correct tool in 92% of benchmark queries (vs. ~25% for a uniform-random baseline) and "
+        "the RAG pipeline with cross-encoder reranking achieves 80% context precision on "
+        "RAG-routed questions. Full numbers in the <i>Evaluation</i> page.</div>",
+        unsafe_allow_html=True,
     )
 
 
@@ -282,15 +359,45 @@ def page_agent():
         "query_disaster_knowledge": "📚",
         "classify_disaster_image": "🖼️",
     }
+    category_emoji = {
+        "csv_query":            "📑",
+        "nasa_events":          "🛰️",
+        "rag_knowledge":        "📚",
+        "image_classification": "🖼️",
+    }
 
     st.markdown("### Conversation samples")
     for turn in DATA.AGENT_TURNS:
         tool_str = "  ".join(f"{tool_emoji.get(t, '🔧')} `{t}`" for t in turn["tools_used"])
-        with st.expander(f"💬  [{turn['category']}]  {turn['question']}"):
-            st.markdown(f"**Tools used:**  {tool_str}")
-            st.markdown(f"**Latency:**  ⏱️ {turn['latency_ms']:,} ms")
-            st.markdown("**Answer:**")
-            st.write(turn["answer"])
+        cat_em = category_emoji.get(turn["category"], "💬")
+        with st.expander(f"{cat_em}  [{turn['category']}]  {turn['question']}"):
+            # If this is an image-classification turn, show the actual image being classified
+            if turn["category"] == "image_classification":
+                # Find which Colombia image is referenced in the question (image_1.jpeg etc.)
+                img_name = None
+                for cand in ("image_1.jpeg", "image_2.jpeg", "image_3.jpeg"):
+                    if cand in turn["question"]:
+                        img_name = cand
+                        break
+                img_name = img_name or "image_1.jpeg"
+                img_path = COLOMBIA_IMAGES_DIR / img_name
+                ic1, ic2 = st.columns([1, 2])
+                with ic1:
+                    if img_path.exists():
+                        st.image(str(img_path), caption=f"Input → {img_name}",
+                                 use_container_width=True)
+                    else:
+                        st.warning(f"Image not bundled: `{img_name}`")
+                with ic2:
+                    st.markdown(f"**Tools used:**  {tool_str}")
+                    st.markdown(f"**Latency:**  ⏱️ {turn['latency_ms']:,} ms")
+                    st.markdown("**Answer:**")
+                    st.write(turn["answer"])
+            else:
+                st.markdown(f"**Tools used:**  {tool_str}")
+                st.markdown(f"**Latency:**  ⏱️ {turn['latency_ms']:,} ms")
+                st.markdown("**Answer:**")
+                st.write(turn["answer"])
 
 
 # -----------------------------------------------------------------------------
