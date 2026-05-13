@@ -1,0 +1,129 @@
+# =============================================================================
+# .gitignore — keeps local artifacts, large data, secrets and caches out of git
+# =============================================================================
+
+# ---- Secrets & credentials --------------------------------------------------
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12
+secrets.json
+credentials.json
+*.token
+.streamlit/secrets.toml
+
+# ---- Python bytecode & build artifacts --------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+build/
+dist/
+develop-eggs/
+.eggs/
+wheels/
+*.whl
+pip-wheel-metadata/
+.installed.cfg
+MANIFEST
+
+# ---- Virtual environments ---------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+.python-version
+.pdm.toml
+__pypackages__/
+
+# ---- Testing & coverage -----------------------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# ---- Type checkers / linters ------------------------------------------------
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ---- Jupyter ----------------------------------------------------------------
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# ---- IDE / editor ------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.spyderproject
+.spyproject
+.ropeproject
+
+# ---- OS files ---------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ---- Claude Code / AI agent local state -------------------------------------
+.claude/
+.cursor/
+.aider*
+
+# ---- Streamlit local cache --------------------------------------------------
+.streamlit/cache/
+
+# ---- HuggingFace / model caches (these can be huge; never commit) ----------
+.cache/
+hf_cache/
+*.bin
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.gguf
+
+# ---- Project-specific large data (users re-download from Kaggle) -----------
+# `info_rag/images/` is ~4.7 GB of disaster images and `info_rag/DISASTERS/`
+# contains EM-DAT CSVs. They are sourced from Kaggle and must not be in git.
+# The .gitkeep + README in info_rag/ explains how to re-fetch them.
+info_rag/images/
+info_rag/DISASTERS/
+info_rag/*.csv
+info_rag/*.xlsx
+
+# ---- Vector DB (generated artifact — re-create with index_disaster_data) ---
+vector_db/
+
+# ---- Logs --------------------------------------------------------------------
+*.log
+logs/
+
+# ---- Misc temporary files ---------------------------------------------------
+*.tmp
+*.bak
+*.orig
+.tmp/
+tmp/

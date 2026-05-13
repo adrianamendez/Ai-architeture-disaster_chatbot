@@ -1,0 +1,134 @@
+[
+  {
+    "question": "How many disasters occurred in the United States between 2018 and 2024?",
+    "expected_tool": "query_disaster_csv",
+    "reference_answer": "The dataset contains records of disasters in the United States from 2018 to 2024.",
+    "category": "csv_query",
+    "keywords": [
+      "united states",
+      "disaster"
+    ],
+    "min_composite_score": 0.55
+  },
+  {
+    "question": "Which country had the most earthquake casualties between 1970 and 2021?",
+    "expected_tool": "query_disaster_csv",
+    "reference_answer": "Historical earthquake data shows countries with highest casualties from seismic events.",
+    "category": "csv_query",
+    "keywords": [
+      "earthquake",
+      "casualt"
+    ],
+    "min_composite_score": 0.55
+  },
+  {
+    "question": "What is the average economic loss from floods globally?",
+    "expected_tool": "query_disaster_csv",
+    "reference_answer": "Flood economic losses vary significantly by region and time period.",
+    "category": "csv_query",
+    "keywords": [
+      "flood",
+      "economic"
+    ],
+    "min_composite_score": 0.55
+  },
+  {
+    "question": "What are the current active wildfires reported by NASA?",
+    "expected_tool": "search_nasa_events",
+    "reference_answer": "NASA EONET tracks active wildfire events globally in real-time.",
+    "category": "nasa_events",
+    "keywords": [
+      "wildfire",
+      "nasa"
+    ],
+    "min_composite_score": 0.5
+  },
+  {
+    "question": "Are there any active volcanic eruptions right now?",
+    "expected_tool": "search_nasa_events",
+    "reference_answer": "NASA EONET monitors volcanic activity worldwide.",
+    "category": "nasa_events",
+    "keywords": [
+      "volcan"
+    ],
+    "min_composite_score": 0.5
+  },
+  {
+    "question": "Show me recent severe storms tracked by NASA",
+    "expected_tool": "search_nasa_events",
+    "reference_answer": "NASA tracks severe storm events through the EONET system.",
+    "category": "nasa_events",
+    "keywords": [
+      "storm",
+      "nasa"
+    ],
+    "min_composite_score": 0.5
+  },
+  {
+    "question": "What types of natural disasters cause the most casualties?",
+    "expected_tool": "query_disaster_knowledge",
+    "reference_answer": "Earthquakes, floods, and storms historically cause the most casualties worldwide.",
+    "category": "rag_knowledge",
+    "keywords": [
+      "earthquake",
+      "flood",
+      "storm"
+    ],
+    "min_composite_score": 0.5
+  },
+  {
+    "question": "How do disaster response times vary by country?",
+    "expected_tool": "query_disaster_knowledge",
+    "reference_answer": "Response times depend on infrastructure, preparedness, and disaster severity.",
+    "category": "rag_knowledge",
+    "keywords": [
+      "response",
+      "time"
+    ],
+    "min_composite_score": 0.5
+  },
+  {
+    "question": "What is the relationship between disaster severity and economic loss?",
+    "expected_tool": "query_disaster_knowledge",
+    "reference_answer": "Higher severity disasters generally correlate with greater economic losses.",
+    "category": "rag_knowledge",
+    "keywords": [
+      "relationship",
+      "between"
+    ],
+    "min_composite_score": 0.5
+  },
+  {
+    "question": "What were the top 5 deadliest disasters in the 2018-2024 dataset?",
+    "expected_tool": "query_disaster_csv",
+    "reference_answer": "The deadliest disasters can be ranked by total casualties from the dataset.",
+    "category": "csv_query",
+    "keywords": [
+      "deadliest",
+      "disasters"
+    ],
+    "min_composite_score": 0.5
+  },
+  {
+    "question": "Compare the number of floods vs earthquakes in South America",
+    "expected_tool": "query_disaster_csv",
+    "reference_answer": "South America experiences both floods and earthquakes with varying frequency.",
+    "category": "csv_query",
+    "keywords": [
+      "compare",
+      "number"
+    ],
+    "min_composite_score": 0.5
+  },
+  {
+    "question": "Are there any current NASA-tracked natural disaster events in Asia?",
+    "expected_tool": "search_nasa_events",
+    "reference_answer": "NASA EONET provides real-time tracking of events across all continents including Asia.",
+    "category": "nasa_events",
+    "keywords": [
+      "there",
+      "current"
+    ],
+    "min_composite_score": 0.5
+  }
+]
