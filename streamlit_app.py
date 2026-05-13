@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import math
 from collections import Counter
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -20,6 +21,10 @@ import plotly.graph_objects as go
 import streamlit as st
 
 import streamlit_data as DATA
+
+# Image folders (relative to this script so it works on Streamlit Cloud too).
+COLOMBIA_IMAGES_DIR = Path(__file__).parent / "test_images_colombia"
+SAMPLE_IMAGES_DIR = Path(__file__).parent / "sample_images"
 
 # -----------------------------------------------------------------------------
 # Page config + global CSS
@@ -165,6 +170,17 @@ def page_data():
     st.title("📊 Data Exploration")
     st.caption("Snapshot of the historical disaster corpus the chatbot reasons over (~80K records).")
 
+    # ---- Visual taste of the corpus ----
+    with st.expander("🖼️ Visual sample of the image corpus (one per class)", expanded=False):
+        classes_order = ["fire", "flood", "landslide", "earthquake", "smoke", "normal"]
+        cols = st.columns(6)
+        for col, cls in zip(cols, classes_order):
+            img_path = SAMPLE_IMAGES_DIR / f"{cls}.jpg"
+            with col:
+                if img_path.exists():
+                    st.image(str(img_path), caption=cls.upper(), use_container_width=True)
+        st.caption("These are the 6 classes the LLaVA classifier in Section 5 has to distinguish.")
+
     c1, c2 = st.columns(2)
     with c1:
         df = pd.DataFrame(
@@ -200,6 +216,13 @@ def page_data():
     )
     fig.update_layout(height=480, margin=dict(l=0, r=0, t=40, b=0))
     st.plotly_chart(fig, use_container_width=True)
+    st.info(
+        "**Reading the map:** China and India dominate by absolute casualties, partly because "
+        "of population density. Haiti stands out for its size — a single event (the 2010 "
+        "earthquake) drives most of that bar. **Caveat:** EM-DAT historically over-represents "
+        "countries with strong reporting infrastructure, so 'absence of red' here does not "
+        "mean 'no disasters'."
+    )
 
     st.markdown("### Events over time (top 5 disaster types)")
     timeline_df = pd.DataFrame(DATA.TIMELINE)
@@ -246,12 +269,26 @@ def page_agent():
     ))
     fig.update_layout(height=320, margin=dict(l=0, r=0, t=10, b=0))
     st.plotly_chart(fig, use_container_width=True)
+    st.info(
+        "**What to notice:** the Sankey shows the agent picking *exactly one* tool per "
+        "category — clean separation. In a more complex benchmark you would see multi-tool "
+        "chains (e.g. `nasa_events → query_disaster_csv` for a follow-up question)."
+    )
+
+    tool_emoji = {
+        "query_disaster_csv": "📑",
+        "search_nasa_events": "🛰️",
+        "search_gdacs_events": "🚨",
+        "query_disaster_knowledge": "📚",
+        "classify_disaster_image": "🖼️",
+    }
 
     st.markdown("### Conversation samples")
     for turn in DATA.AGENT_TURNS:
-        with st.expander(f"[{turn['category']}]  {turn['question']}"):
-            st.markdown("**Tools used:**  " + ", ".join(f"`{t}`" for t in turn["tools_used"]))
-            st.markdown(f"**Latency:**  {turn['latency_ms']:,} ms")
+        tool_str = "  ".join(f"{tool_emoji.get(t, '🔧')} `{t}`" for t in turn["tools_used"])
+        with st.expander(f"💬  [{turn['category']}]  {turn['question']}"):
+            st.markdown(f"**Tools used:**  {tool_str}")
+            st.markdown(f"**Latency:**  ⏱️ {turn['latency_ms']:,} ms")
             st.markdown("**Answer:**")
             st.write(turn["answer"])
 
@@ -263,6 +300,24 @@ def page_agent():
 def page_classification():
     st.title("🖼️ Image Classification (LLaVA via Ollama)")
     st.caption("30 images evaluated, 5 per class across 6 classes.")
+
+    # ---- Sample images grid ----
+    st.markdown("### What the model sees — one sample per class")
+    classes_order = ["fire", "flood", "landslide", "earthquake", "smoke", "normal"]
+    cols = st.columns(6)
+    for col, cls in zip(cols, classes_order):
+        img_path = SAMPLE_IMAGES_DIR / f"{cls}.jpg"
+        with col:
+            if img_path.exists():
+                st.image(str(img_path), caption=cls.upper(), use_container_width=True)
+            else:
+                st.markdown(f"`{cls}` (image not bundled)")
+    st.caption(
+        "These are downsized samples from the Kaggle 5-class disaster image set "
+        "(plus an earthquake set). The full dataset (~9k images) lives in `info_rag/` "
+        "and is not bundled in the repo."
+    )
+    st.divider()
 
     df = pd.DataFrame(
         DATA.CLASSIFICATION_RESULTS,
@@ -297,6 +352,13 @@ def page_classification():
     )
     fig.update_layout(height=420)
     st.plotly_chart(fig, use_container_width=True)
+    st.info(
+        "**What to notice:** the strong diagonal means most classes are predicted correctly. "
+        "Off-diagonal cells reveal the model's blind spots — e.g. a *fire ↔ smoke* confusion "
+        "is common because they share visual cues, and *landslide ↔ flood* both involve "
+        "mud / water textures. These are exactly the failure modes a real deployment would "
+        "need to harden against (e.g. by adding a second-stage verifier)."
+    )
 
     # Per-class metrics
     st.markdown("### Per-class precision / recall / F1")
@@ -332,9 +394,11 @@ def page_classification():
     fig.update_layout(height=360, yaxis_range=[0, 1.05], showlegend=False)
     fig.update_traces(textposition="outside")
     st.plotly_chart(fig, use_container_width=True)
-    st.caption(
-        "A well-calibrated classifier shows accuracy(high) > accuracy(medium) > accuracy(low). "
-        "If monotonicity breaks, the confidence label is not reliable as a downstream filter."
+    st.info(
+        "**What to notice:** ideally the bars descend left-to-right (high > medium > low). "
+        "If they don't, the model's self-reported confidence is decorative — it can't be used "
+        "as a filter to auto-route low-confidence cases to a human reviewer. Calibration is "
+        "what separates a confidence label that looks useful from one that actually is."
     )
 
 
@@ -349,16 +413,37 @@ def page_colombia():
         "not part of any training/evaluation set."
     )
 
+    type_color = {
+        "fire":      "#e74c3c",
+        "flood":     "#3498db",
+        "landslide": "#8d6e63",
+        "earthquake": "#f39c12",
+        "smoke":     "#7f8c8d",
+        "normal":    "#2ecc71",
+    }
+
     for r in DATA.COLOMBIA_RESULTS:
         with st.container(border=True):
-            c1, c2 = st.columns([1, 3])
+            c1, c2 = st.columns([1, 2])
             with c1:
-                st.markdown(f"**{r['file']}**")
-                st.markdown(f"<span class='small-caption'>{r['size']}</span>",
-                            unsafe_allow_html=True)
-                st.markdown(f"**Type:** `{r['disaster_type']}`")
-                st.markdown(f"**Confidence:** `{r['confidence']}`")
+                img_path = COLOMBIA_IMAGES_DIR / r["file"]
+                if img_path.exists():
+                    st.image(
+                        str(img_path),
+                        caption=r["file"],
+                        use_container_width=True,
+                    )
+                else:
+                    st.warning(f"Image not found: `{r['file']}`")
             with c2:
+                badge_color = type_color.get(r["disaster_type"], "#1976d2")
+                st.markdown(
+                    f"<span class='badge' style='background:{badge_color};color:white;font-size:13px;padding:4px 12px;'>"
+                    f"{r['disaster_type'].upper()}</span> "
+                    f"<span class='small-caption' style='margin-left:10px;'>"
+                    f"confidence: <b>{r['confidence']}</b> · {r['size']} px</span>",
+                    unsafe_allow_html=True,
+                )
                 st.markdown("**LLaVA description**")
                 st.write(r["description"])
 
@@ -447,6 +532,12 @@ def page_evaluation():
     fig.update_layout(height=350, yaxis_range=[0, 1.05], showlegend=False,
                       title=f"Agent beats random by {(bl['agent_tool_accuracy'] / bl['random_tool_accuracy']):.1f}x")
     st.plotly_chart(fig, use_container_width=True)
+    st.info(
+        "**Why this matters:** without a baseline, a 92% tool-selection accuracy is just a "
+        "number. Comparing against uniform-random tool selection (4 tools → 25% expected) "
+        "shows the agent is actually doing useful routing, not getting lucky. This is the "
+        "minimum a non-trivial agent must beat."
+    )
 
     # Per-question table
     st.markdown("### Per-question detail")
