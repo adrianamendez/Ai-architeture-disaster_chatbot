@@ -1,0 +1,22 @@
+# Full stack for running disaster_chatbot.ipynb locally with Ollama.
+# For the Streamlit Cloud deployment use the slim requirements.txt at the repo root.
+
+langchain>=0.3.0,<0.4
+langchain-ollama>=0.2.0,<0.3
+langgraph>=0.2.0,<1
+chromadb>=0.4.15,<0.6
+sentence-transformers>=2.2.2,<4
+pandas>=2.0.0,<3
+mcp>=1.0.0,<2
+fastmcp>=0.1.0,<3
+httpx>=0.27.0,<0.30
+feedparser>=6.0.0,<7
+Pillow>=10.0.0,<12
+numpy>=1.24.0,<3
+pytest>=7.4.0,<9
+matplotlib>=3.7.0,<4
+seaborn>=0.12.0,<1
+plotly>=5.18.0,<7
+pycountry>=23.0.0,<27
+streamlit>=1.40.0,<2
+ipykernel>=6.25.0,<7
